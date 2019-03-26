@@ -17,8 +17,8 @@ hFOV = (FOV/dAspect)*hAspect
 hFOV_kmeter= tan(hFOV)*altitude #converting radians into km
 vFOV_kmeter= tan(vFOV)*altitude
 
-print"\nvFOV = %.2f deg\nhFOV = %.2f deg\nFOV = %.2f deg\n"% (math.degrees(vFOV), math.degrees(hFOV), math.degrees(FOV))
-print"focal length = %.2fmm\nsensor size = %dmm\nthe area is %.2f x %.2f km\n"% (focal_length, sensor_size, hFOV_kmeter, vFOV_kmeter)
+print "\nvFOV = {:.2f} deg\nhFOV = {:.2f} deg\nFOV = {:.2f} deg\n".format(math.degrees(vFOV), math.degrees(hFOV), math.degrees(FOV))
+print "focal length = {:.2f}mm\nsensor size = {}mm\nthe area is {:.2f} x {:.2f} km\n".format(focal_length, sensor_size, hFOV_kmeter, vFOV_kmeter)
   
 
   
