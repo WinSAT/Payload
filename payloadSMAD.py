@@ -9,30 +9,36 @@ FireSatParams = {
 	'nadirAngleMaxDeg': 57.9, #eta [deg] - max target range from sat to off-nadir target
 	'alongTrackGSD_ECAMax': 68.0, #Y_max [m] - max along-track Ground Sampling Distance; design param
 	'pixelBitEncodeNum': 8, #B [num] - num of bits used to encode each pixel
-
+	'pixelWhiskbroomInstNum': 256, #N_m [num] - must be large enough to allow sufficient integration time; design param
+	'squareDetectorWidth': 30e-6, #d [m]; design param
+	'imagingQualityFactor': 1.1, #Q [num] - 0.5<Q<2 (1.1 for good img quality); design param
+	'operatingWavelength': 4.2e-6, #lambda [m] - based on subject trades; design param
 }
 
 WinSATParams = {
 	'altitude': 500.0e3, #[m]
 	'nadirAngleMaxDeg': 25.0, #eta [deg] - max target range from sat to off-nadir target
 	'alongTrackGSD_ECAMax': 50.0, #Y_max [m] - max along-track Ground Sampling Distance @ ECAMax; design param
+	'pixelBitEncodeNum': 8, #B [num] - num of bits used to encode each pixel
+	'pixelWhiskbroomInstNum': 256, #N_m [num] - must be large enough to allow sufficient integration time; design param
+	'squareDetectorWidth': 30e-6, #d [m]; design param
+	'imagingQualityFactor': 1.1, #Q [num] - 0.5<Q<2 (1.1 for good img quality); design param
+	'operatingWavelength': 4.2e-6, #lambda [m] - based on subject trades; design param
 }
 
 FireSat = satellite.Satellite(FireSatParams)
 FireSat.set(calculateOrbitalParamters(FireSat.altitude))
 
-def calculateOrbitalParamters(sat):
+def calculateOrbitalParamters(sat, results = {}):
 	#circular orbit - in mins
-	results = {}
 	results["orbitalPeriod"] = (1.658669e-4)*(6378.14+sat.altitude)**(1.5) #p [mins]
 	results["angularVelocity"] = 6.0/results["orbitalPeriod"] #omega [deg/s] ; <= 0.071 deg/s (max angular vel for circular orbit)
 	results["groundTrackVelocity"] = 2*np.pi*EARTH_RADIUS/results['orbitalPeriod'] #V_g [m/s] ; <= 7905.0 m/s for circular orbit
 	results["nodeShift"] = (results['orbitalPeriod']/1436.0)*360.0 #dL [deg] - spacing between sucessive node crossings on the equator
 	return results
 
-def calculateSensorViewingParams(sat):
+def calculateSensorViewingParams(sat, results = {}):
 	#TODO: This func assumes spherical model of earth, eventually will use earthOblatenessModel()
-	results = {}
 	results["earthAngularRadius"] = np.arcsin(EARTH_RADIUS/(EARTH_RADIUS+sat.altitude)) #p [rad] - angular radius of spherical earth wrt spacecraft pov
 	results["maxHorizonDistance"] = EARTH_RADIUS*np.tan(np.deg2rad(90.0)-results['earthAngularRadius']) #D_max [m] - distance to horizon
 	results["elevationAngleMin"] = np.arccos(np.sin(np.deg2rad(sat.nadirAngleMaxDeg)) / np.sin(results["earthAngularRadius"])) #epsilon_min [rad] - at target between spacecraft and local horizontal
@@ -42,18 +48,33 @@ def calculateSensorViewingParams(sat):
 	results["swathWidthAngle"] = 2*results['earthCentralAngle'] #[rad] - determines coverage
 	return results
 
-def calculatePixelDataParams(sat):
-	results = {}
+def calculatePixelDataParams(sat, results = {}):
 	results["IFOV"] = sat.alongTrackGSDMax / sat.distanceToMaxOffNadir #IFOV [rad] - Instantaneous Field of View; one pixel width
-	results["acrossTrackGSD_ECAMax"] = sat.alongTrackGSD_ECAMax / np.cos(sat.incidenceAngleMax) #X_max [m] - max across-track Ground Sampling Distance @ ECAMax
-	results["acrossTrackGSD_Nadir"] = sat.IFOV * sat.altitude #X [m] - across-track Ground Sampling Distance @ Nadir
-	results["alongTrackGSD_Nadir"] = sat.IFOV * sat.altitude #Y [m] - along-track Ground Sampling Distance @ Nadir
-	results["crossTrackPixelNum"] = 2*np.deg2rad(sat.nadirAngleMaxDeg)/results['IFOV'] #Z_c [num] - num of across-track pixels
-	results["alongTrackSwathNumRate"] = sat.groundTrackVelocity / results['alongTrackGSD_Nadir'] #Z_a [num/s] - num of swaths recorded per sec
+	results["crossTrackPixelRes_ECAMax"] = sat.alongTrackGSD_ECAMax / np.cos(sat.incidenceAngleMax) #X_max [m] - max cross-track pixel resolution @ ECAMax
+	results["crossTrackGPR_Nadir"] = sat.IFOV * sat.altitude #X [m] - cross-track Ground Pixel Resolution @ Nadir
+	results["alongTrackGPR_Nadir"] = sat.IFOV * sat.altitude #Y [m] - along-track Ground Pixel Resolution @ Nadir
+	results["crossTrackPixelNum"] = 2*np.deg2rad(sat.nadirAngleMaxDeg)/results['IFOV'] #Z_c [num] - num of cross-track pixels
+	results["alongTrackSwathNumRate"] = sat.groundTrackVelocity / results['alongTrackGPR_Nadir'] #Z_a [num/s] - num of swaths recorded per sec
 	results["pixelRecordRate"] = results['crossTrackPixelNum'] * results['alongTrackSwathNumRate'] #Z [num/s] - num of pixels recorded per sec
 	results["dataRate"] = results['pixelRecordRate'] * sat.pixelBitEncodeNum #DR [Mbps] - data rate
 	return results
 
+def calculateSensorIntegrationParams(sat, results = {}):
+	#Verify detector time constant, T_det, is < pixelIntegrationPeriod in table 9-12 in SMAD
+	results["pixelIntegrationPeriod"] = sat.alongTrackGPR_Nadir * sat.pixelWhiskbroomInstNum / (sat.groundTrackVelocity * sat.crossTrackPixelNum) #T_i [sec]
+	results["pixelReadOutFreq"] = 1.0/results["pixelIntegrationPeriod"] #F_p [Hz]
+	return results
+
+def calculateSensorOptics(sat, results = {}):
+	results["focalLength"] = sat.altitude*sat.squareDetectorWidth/sat.crossTrackGPR_Nadir #f [m]
+	results["defractionLimitedApertureDiameter"] = 2.44*sat.operatingWavelength*results['focalLength']*sat.imagingQualityFactor/sat.squareDetectorWidth
+	results["opticsFNum"] = results['focalLength']/results["defractionLimitedApertureDiameter"] #F# [num] - typical range: 4-6 
+	results["opticalFOV"] = sat.IFOV * sat.pixelWhiskbroomInstNum #FOV [rad] - FOV for the array of pixels
+	results["cutoffFreq"] = results['defractionLimitedApertureDiameter'] / (sat.operatingWavelength*sat.altitude) #F_c [line pairs / m] - referred to nadir
+	results["crossTrackNyquistFreq"] = 1./(2*sat.crossTrackGPR_Nadir) #F_nc [line pairs / m]
+	results["alongTrackNyquistFreq"] = 1./(2*sat.alongTrackGPR_Nadir) #F_na [line pairs / m]
+	results["nyquistFreqRelative"] = [results["crossTrackNyquistFreq"]/results["cutoffFreq"],results["alongTrackNyquistFreq"]/results["cutoffFreq"]] #[F_qc,F_qa] [%,%] - % of the cutoff freq used in this case
+	#results["opticsPSF"] = 
 
 
 
@@ -120,7 +141,7 @@ ecaMax = 90 - math.degrees(elevation) - math.degrees(maxLook) #earth central ang
 slantRange = radiusE*(sin(angularTarget)/sin(maxLook)) #slant range to target
 IA = 90 - math.degrees(elevation) # incident angle
 yMax = 150 #along tack ground sampling distance, not sure where to find this value, in m
-xMax = yMax/cos(IA) #across track ground sampling
+xMax = yMax/cos(IA) #cross track ground sampling
 
 print ("\nOrbit time is {:.2f} min".format(orbitP))
 print ("Ground velocity is {:.2f} km/s".format(velocityG))
