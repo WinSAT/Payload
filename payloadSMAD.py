@@ -1,5 +1,79 @@
-import math
+import satellite
 from math import atan, asin, acos, sin, cos, tan, degrees, radians, pi, sqrt
+import numpy as np
+
+EARTH_RADIUS = 6378.14e3 #[m]
+
+FireSatParams = {
+	'altitude': 700.0e3, #[m]
+	'nadirAngleMaxDeg': 57.9, #eta [deg] - max target range from sat to off-nadir target
+	'alongTrackGSD_ECAMax': 68.0, #Y_max [m] - max along-track Ground Sampling Distance; design param
+	'pixelBitEncodeNum': 8, #B [num] - num of bits used to encode each pixel
+
+}
+
+WinSATParams = {
+	'altitude': 500.0e3, #[m]
+	'nadirAngleMaxDeg': 25.0, #eta [deg] - max target range from sat to off-nadir target
+	'alongTrackGSD_ECAMax': 50.0, #Y_max [m] - max along-track Ground Sampling Distance @ ECAMax; design param
+}
+
+FireSat = satellite.Satellite(FireSatParams)
+FireSat.set(calculateOrbitalParamters(FireSat.altitude))
+
+def calculateOrbitalParamters(sat):
+	#circular orbit - in mins
+	results = {}
+	results["orbitalPeriod"] = (1.658669e-4)*(6378.14+sat.altitude)**(1.5) #p [mins]
+	results["angularVelocity"] = 6.0/results["orbitalPeriod"] #omega [deg/s] ; <= 0.071 deg/s (max angular vel for circular orbit)
+	results["groundTrackVelocity"] = 2*np.pi*EARTH_RADIUS/results['orbitalPeriod'] #V_g [m/s] ; <= 7905.0 m/s for circular orbit
+	results["nodeShift"] = (results['orbitalPeriod']/1436.0)*360.0 #dL [deg] - spacing between sucessive node crossings on the equator
+	return results
+
+def calculateSensorViewingParams(sat):
+	#TODO: This func assumes spherical model of earth, eventually will use earthOblatenessModel()
+	results = {}
+	results["earthAngularRadius"] = np.arcsin(EARTH_RADIUS/(EARTH_RADIUS+sat.altitude)) #p [rad] - angular radius of spherical earth wrt spacecraft pov
+	results["maxHorizonDistance"] = EARTH_RADIUS*np.tan(np.deg2rad(90.0)-results['earthAngularRadius']) #D_max [m] - distance to horizon
+	results["elevationAngleMin"] = np.arccos(np.sin(np.deg2rad(sat.nadirAngleMaxDeg)) / np.sin(results["earthAngularRadius"])) #epsilon_min [rad] - at target between spacecraft and local horizontal
+	results["incidenceAngleMax"] = (np.pi/2) - results['elevationAngleMin']
+	results["earthCentralAngle"] = (np.pi/2) - np.deg2rad(sat.nadirAngleMaxDeg) - results['elevationAngleMin'] #lambda [rad] - at center of earth from subsatellite point to nadirMax
+	results["distanceToMaxOffNadir"] = EARTH_RADIUS*np.sin(results['earthCentralAngle'])/np.sin(np.deg2rad(sat.nadirAngleMaxDeg)) #Dn_max [m] - i.e. Slant range; distance from satellite to max off-nadir target
+	results["swathWidthAngle"] = 2*results['earthCentralAngle'] #[rad] - determines coverage
+	return results
+
+def calculatePixelDataParams(sat):
+	results = {}
+	results["IFOV"] = sat.alongTrackGSDMax / sat.distanceToMaxOffNadir #IFOV [rad] - Instantaneous Field of View; one pixel width
+	results["acrossTrackGSD_ECAMax"] = sat.alongTrackGSD_ECAMax / np.cos(sat.incidenceAngleMax) #X_max [m] - max across-track Ground Sampling Distance @ ECAMax
+	results["acrossTrackGSD_Nadir"] = sat.IFOV * sat.altitude #X [m] - across-track Ground Sampling Distance @ Nadir
+	results["alongTrackGSD_Nadir"] = sat.IFOV * sat.altitude #Y [m] - along-track Ground Sampling Distance @ Nadir
+	results["crossTrackPixelNum"] = 2*np.deg2rad(sat.nadirAngleMaxDeg)/results['IFOV'] #Z_c [num] - num of across-track pixels
+	results["alongTrackSwathNumRate"] = sat.groundTrackVelocity / results['alongTrackGSD_Nadir'] #Z_a [num/s] - num of swaths recorded per sec
+	results["pixelRecordRate"] = results['crossTrackPixelNum'] * results['alongTrackSwathNumRate'] #Z [num/s] - num of pixels recorded per sec
+	results["dataRate"] = results['pixelRecordRate'] * sat.pixelBitEncodeNum #DR [Mbps] - data rate
+	return results
+
+
+
+
+def earthOblatenessModeling(satVectorEFF):
+	f = 1/298.257 # f - earth flattening factor ; f = (R_e - R_p) / R_e : R_e (equatorial radius) ~ 6378.140, R_p (polar radius)
+	a = np.sqrt(np.dot(satVectorEFF**2,[1,1,(1 - earthFlattening)**2])) #a - equatorial radius, c - polar radius
+	#lat (lambda), long (phi) = geocentric lat, long of the observers (sats) position
+	#azi = azimuth angle of the horizon vector
+	R = a*(1-f) / np.sqrt(1 - (2 - f)*f*np.cos(lat)**2) #Earth Radius to local surface
+	d = np.linalg.norm(satVectorEFF) #distance from earth center to satellite in EFF
+	term1 = (((d**2 - R**2)/a**2)*(1 + ((2-f)*f*R**2*np.cos(lat)**2*np.sin(azi)**2 / (1-f)**2*a**2)))**0.5
+	earthAngularRadius = 1.0 / np.arctan(term1 + ((2-f)*f*R**2*np.sin(azi) / 2*(1-f)**2)*a**2)
+	'''
+	H = np.sqrt(np.sum(satVectorEFF**2)-a**2) #init estimate (assumes spherical earth)
+	#iteratively compute max distance to horizon
+	for n in range(10):
+		H = np.sqrt(np.sum([]))
+	'''
+
+
 
 #Focal length and sensor parameters
 altitude = 500 #altitude in km
