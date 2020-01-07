@@ -43,7 +43,14 @@ print("Reading from serial port...")
 
 while 1:
     x = ser.readline();
-    if x != '':
-        print(x);
+    x = x.decode('utf-8')
     if x == '1':
         take_picture()
+    elif x == "ping":
+        print("Got ping from OBC. Sending back a response pong...")
+        response = "pong"
+        ser.write(response.encode('utf-8'))
+    elif x != '':
+        print(x)
+
+        
