@@ -13,7 +13,7 @@ class PingHandler:
         # setup logger
         self.logger = logger.Logger("ping-handler")
 
-    def handle(self, uart, buffer):
-        return True
+    def handle_ping(self):
+        return "pong"
 
 

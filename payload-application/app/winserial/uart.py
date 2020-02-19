@@ -1,18 +1,17 @@
 import serial
 import time
+from app import config
 
 class UART:
-    def __init__(self, port_name, timeout_value):
-        self.port = port_name
+    def __init__(self, port_number):
+        self.port = config.PORT_NAME[port_number]
         self.serial = serial.Serial(
-            port=str(port_name),
+            port=self.port,
             baudrate=115200,
             parity=serial.PARITY_NONE,
             stopbits=serial.STOPBITS_ONE,
             bytesize=serial.EIGHTBITS,
-            timeout=timeout_value)
-
-        self.port_name = port_name
+            timeout=1)
 
         # setup xmodem for image transfers
         self.modem = XMODEM(self.getc, self.putc)
@@ -83,23 +82,3 @@ class UART:
         except Exception as e:
             self.logger.warn("Error sending message over uart port {}: {}".format(self.port, str(e)))
             return False, None
-
-class UART_fake:
-    def __init__(self):
-        pass
-    
-    def write(self, message):
-        return True
-    
-    def read(self):
-        return True, None
-
-    def transfer_image(self):
-        return True
-
-UART_PORT = '/dev/ttyAMA0' 
-TIMEOUT = 1
-try:
-    uart1 = UART(UART_PORT, TIMEOUT)
-except serial.SerialException as e:
-    uart1 = UART_fake()

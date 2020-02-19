@@ -8,24 +8,6 @@ import time
 from winserial import uart
 from winlogging import logger
 
-#############
-# Config Data
-DELAY = 1
-UART_PORT = '/dev/ttyS1'
-TIMEOUT = 1
-
-# RETURN CODES FROM PAYLOAD
-SUCCESS = "<<00>>"
-FAILURE = "<<01>>"
-
-COMMANDS = {
-    "ping": "<<ping>>",
-    "ImageTransfer": "<<imgcap>>",
-    "ImageCapture": "<<imgtra>>"
-}
-# End Config Data
-#############
-
 class ImageHandler:
 
     def __init__(self):

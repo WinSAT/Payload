@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import argparse
+
 # get arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('--debug', '-d', dest='debug', action='store_const',

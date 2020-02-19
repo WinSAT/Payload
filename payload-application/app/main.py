@@ -2,54 +2,51 @@
 
 from winserial import uart
 from winlogging import logger
+from winapi import obc
 from handlers import command_handler
+
 import time
 import serial
-# from handlers import error_handler
-
-#### CONFIG ####
-
-################
 
 # setup logger
 logger = logger.Logger("main")
 
+# setup global objects
+OBC = obc.OBC()
+ch = command_handler.CommandHandler()
+
 def run(debug, uart):
 
-    while True:
-        # setup connection to OBC
-        try: 
-            if uart:
-                UART = uart.UART(0)
-            else:
-                UART = uart.mock_UART(0)
-            break 
-        except Exception as e:
-            logger.error("FATAL ERROR: Unable to open UART port {}:{}. No communication with OBC. Retrying in 10 seconds...".format(type(e).__name__, str(e)))
-            # maybe reboot here after a while?
-            time.sleep(10)
+    logger.info("Trying to initiate connection with OBC...")
+    OBC.connect(uart) # this will loop until a connection is made
 
-    # initialize command handler
-    command_handler = command_handler.CommandHandler()
-    
-    # start main system loop
     logger.info("Initiated connection with OBC. Waiting for messages...")
+    # start main system loop
     while True:
         try:
-            success, message = UART.read()
-
-            # check if got nothing
-            if not message:
-                continue
-
-            # check if command is valid
-            if (command_handler.check_command(message)):
-                if not UART.write(SUCCESS):
-                    logger.warn("Error trying to write {} message back to OBC.".format(SUCCESS))
+            command = OBC.read() 
+    
+            if (OBC.check_command(command)):
+                OBC.status(True)
+                success, response = ch.handle(command)
+                if success:
+                    OBC.write(response)
+                else:
+                    OBC.status(False)
             else:
-                if not UART.write(INVALID):
-                    logger.warn("Error trying to write {} message back to OBC.".format(INVALID))   
+                OBC.status(False)
 
+        except Exception as e:
+            logger.warn("Exception {}:{}".format(type(e).__name__, str(e)))
+            # pass to error handler here?
+            # error_handler.handle(error)
+
+        finally:
+            time.sleep(0.01)
+            # kick watchdog here
+
+
+'''
             # send command to handler in seperate thread
                 response = command_hander.handle(UART, message)
                 if success:
@@ -64,14 +61,8 @@ def run(debug, uart):
                     # pass something to error handler here?
                     # error_handler.handle(error)
 
-        except serial.SerialException as e:
-            logger.warn("Exception {}:{}".format(type(e).__name__, str(e)))
-            # pass to error handler here?
-            # error_handler.handle(error)
 
-        finally:
-            time.sleep(1)
-            # kick watchdog here
+'''
 
 if __name__ == "__main__":
     run()
