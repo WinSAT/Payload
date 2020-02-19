@@ -4,7 +4,6 @@ from winserial import uart
 from winlogging import logger
 from handlers import command_handler
 import time
-import argparse
 import serial
 # from handlers import error_handler
 
@@ -15,21 +14,26 @@ import serial
 # setup logger
 logger = logger.Logger("main")
 
-# return codes 
-SUCCESS = "<<OK>>"
-FAILURE = "<<ER>>"
-INVALID = "<<IN>>"
+def run(debug, uart):
 
-# setup command handler
-command_handler = command_handler.CommandHandler()
-#error_handler = error_handler.ErrorHandler()
+    while True:
+        # setup connection to OBC
+        try: 
+            if uart:
+                UART = uart.UART(0)
+            else:
+                UART = uart.mock_UART(0)
+            break 
+        except Exception as e:
+            logger.error("FATAL ERROR: Unable to open UART port {}:{}. No communication with OBC. Retrying in 10 seconds...".format(type(e).__name__, str(e)))
+            # maybe reboot here after a while?
+            time.sleep(10)
 
-def main():
-
-
-
+    # initialize command handler
+    command_handler = command_handler.CommandHandler()
+    
     # start main system loop
-    logger.info("Starting read from UART...")
+    logger.info("Initiated connection with OBC. Waiting for messages...")
     while True:
         try:
             success, message = UART.read()
@@ -46,7 +50,7 @@ def main():
                 if not UART.write(INVALID):
                     logger.warn("Error trying to write {} message back to OBC.".format(INVALID))   
 
-            # send command to handler
+            # send command to handler in seperate thread
                 response = command_hander.handle(UART, message)
                 if success:
                     logger.info("Completed command received from OBC: {}".format(message))
@@ -70,4 +74,4 @@ def main():
             # kick watchdog here
 
 if __name__ == "__main__":
-    main()
+    run()
