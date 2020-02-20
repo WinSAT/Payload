@@ -18,7 +18,7 @@ class ImageHandler():
         try:
             # capture image here
             success = True
-            errors = ""
+            response = "<<DONE>>"
 
         except Exception as e:
             # return results

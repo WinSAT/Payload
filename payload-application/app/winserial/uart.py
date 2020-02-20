@@ -1,6 +1,10 @@
+#!/usr/bin/env python3
+
 import serial
 import time
 from app import config
+from xmodem import XMODEM
+from app.winlogging import logger
 
 class UART:
     def __init__(self, port_number):
@@ -15,6 +19,8 @@ class UART:
 
         # setup xmodem for image transfers
         self.modem = XMODEM(self.getc, self.putc)
+
+        self.logger = logger.Logger("UART")
 
     def getc(self, size, timeout=1):
         return self.serial(size) or None
@@ -62,14 +68,14 @@ class UART:
     # get message from hardware over uart
     def read(self):
         try:
+            message = None
             self.serial.close()
             self.serial.open()
-
             if self.serial.isOpen():
                 # if uart port is open, try to read something
                 message = self.serial.readline()
                 message = message.decode('utf-8')
-                self.logger.debug("Uart port {} is open. Read line: {}".format(message))
+                self.logger.debug("Uart port {} is open. Read line: {}".format(self.port,message))
                 self.serial.close()
                 return True, message
             else:
@@ -80,5 +86,5 @@ class UART:
 
         # return failure if exception during read/decoding
         except Exception as e:
-            self.logger.warn("Error sending message over uart port {}: {}".format(self.port, str(e)))
+            self.logger.warn("Error reading message: {} over uart port {}: {}".format(message, self.port, str(e)))
             return False, None

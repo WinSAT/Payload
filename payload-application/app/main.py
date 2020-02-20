@@ -25,12 +25,14 @@ def run(debug, uart):
     while True:
         try:
             command = OBC.read() 
-    
+            if command == None:
+                continue
+
             if (OBC.check_command(command)):
                 OBC.status(True)
                 success, response = ch.handle(command)
                 if success:
-                    logger.info("Successful handling command: {}. Sending back OK status...".format(command))
+                    logger.info("Successful handling command: {}. Sending back reponse: {}".format(command, response))
                     OBC.write(response)
                 else:
                     logger.info("Unsuccessful handling command: {}. Sending back error status...".format(command))

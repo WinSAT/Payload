@@ -14,7 +14,7 @@ from app import config
 class OBC():
 
     def __init__(self):
-        self.logger = logger.Logger("obc-api")
+        self.logger = logger.Logger("OBC")
         self.UART = None
         self.use_uart = None
 
@@ -25,6 +25,7 @@ class OBC():
             while True:
                 try: 
                     self.UART = uart.UART(0) 
+                    break
                 except Exception as e:
                     self.logger.error("FATAL ERROR: Unable to open UART port {}:{}. No communication with OBC. Retrying in 10 seconds...".format(type(e).__name__, str(e)))
                     # maybe reboot here after a while? -> pass to error handler for that?
@@ -38,6 +39,7 @@ class OBC():
             success, message = self.UART.read()
             if success:
                 return self.unpack(message)
+            return None
         else:
             return self.unpack(input("Enter fake serial input:"))
 
