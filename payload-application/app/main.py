@@ -45,24 +45,5 @@ def run(debug, uart):
             time.sleep(0.01)
             # kick watchdog here
 
-
-'''
-            # send command to handler in seperate thread
-                response = command_hander.handle(UART, message)
-                if success:
-                    logger.info("Completed command received from OBC: {}".format(message))
-                    if not UART.write(response):
-                        logger.warn("Error trying to write {} message back to OBC {}:{}".format(return_code, type(e).__name__,str(e)))
-                else:
-                    logger.warn("Errors handling command received from OBC: {}".format(message))
-                    if not UART.write(ERROR):
-                        logger.warn("Error trying to write {} message back to OBC {}:{}".format(return_code, type(e).__name__,str(e)))
-
-                    # pass something to error handler here?
-                    # error_handler.handle(error)
-
-
-'''
-
 if __name__ == "__main__":
     run()

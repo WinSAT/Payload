@@ -23,10 +23,20 @@ class CommandHandler():
 
     def handle(self, command):
         # send the command to the appropriate handler
+        
+        # command: ping
         if command == "ping":
             success = True
             response = ping_handler.handle_ping()
-        #elif command == "image_capture":
+        
+        # command: image_capture
+        elif command == "image_capture":
+            success, response = image_handler.capture_image()
+        
+        # command: image_transfer
+        # elif command = "image_transfer":
+        #   success, response = image_handler.transfer_image()
+
         else:
             # should never get here
             self.logger.warn("FATAL: Command {} is in valid commands but doesn't have handler.".format(command))

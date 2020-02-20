@@ -21,15 +21,24 @@ class ImageHandler:
         pass
 
     def image_capture(self):
-        # should send hardware a ping and expect a pong back
-        success, errors = self.UART.write(COMMANDS["ImageCapture"])
-        # return results
+        try:
+            # capture image here
+            success = True
+            errors = []
+
+        except Exception as e:
+            # return results
+            success = False
+            errors = [str(e)]
+            
         return success, errors
 
     def image_transfer(self):
         # should send hardware a ping and expect a pong back
-        success, errors = self.UART.write(COMMANDS["ImageTransfer"])
+        try:
+            # begin image transfer
 
+            
         if success:
             # open stream for image transfer
             return self.UART.readImage()

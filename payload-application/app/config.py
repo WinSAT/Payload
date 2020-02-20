@@ -10,7 +10,8 @@ RETURN_CODE = {
 
 COMMANDS = {
     "ping",
-    "get_power_state"
+    "capture_image",
+    "transfer_image"
 }
 
 PORT_NAME = {
