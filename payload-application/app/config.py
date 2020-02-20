@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from handlers import command_handler
+from app.handlers import command_handler
 
 # RETURN CODES
 RETURN_CODE = {

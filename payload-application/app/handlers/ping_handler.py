@@ -5,7 +5,7 @@ Class for handling ping command received from OBC
 '''
 
 import time
-from winlogging import logger
+from app.winlogging import logger
 
 class PingHandler:
 

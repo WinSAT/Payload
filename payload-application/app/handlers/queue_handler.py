@@ -5,7 +5,7 @@ Class for handling input serial queue received from OBC
 '''
 
 import time
-from winlogging import logger
+from app.winlogging import logger
 import re
 from threading import Thread
 import queue
@@ -50,6 +50,7 @@ class QueueHandler(Thread):
     # format responses to be send over serial back to OBC
     def format(self, command):
         return "<<" + command + ">>"
+
 '''
 
 class CommandHandler(threading.Thread):
@@ -190,3 +191,4 @@ def run(debug, uart):
         finally:
             time.sleep(1)
             # kick watchdog here
+'''

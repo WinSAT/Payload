@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-from winserial import uart
-from winlogging import logger
-from winapi import obc
-from handlers import command_handler
+from app.winserial import uart
+from app.winlogging import logger
+from app.winapi import obc
+from app.handlers import command_handler
 
 import time
 import serial

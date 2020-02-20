@@ -44,7 +44,7 @@ class UART:
 
             if self.serial.isOpen():
                 # if uart port is open, try to send encoded string message
-                self.serial.write(str(message).encode('utf-8'))
+                self.serial.write(str(message + '\r\n').encode('utf-8'))
                 self.serial.close()
                 self.logger.debug("UART port {} is open. Sent message: {}".format(self.port, str(message)))
                 return True

@@ -7,8 +7,8 @@ API for interacting with OBC
 import time
 import re
 
-from winlogging import logger
-from winserial import uart
+from app.winlogging import logger
+from app.winserial import uart
 from app import config
 
 class OBC():

@@ -5,8 +5,8 @@ Class for interacting with images (transfer, read/write, captures, etc.)
 '''
 
 import time
-from winserial import uart
-from winlogging import logger
+from app.winserial import uart
+from app.winlogging import logger
 
 class ImageHandler:
 
