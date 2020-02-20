@@ -9,7 +9,7 @@ class Logger():
         self.logger.setLevel(log_level)
         
         # setup log file handler
-        fh = logging.FileHandler('{}.log'.format(logger_name))
+        fh = logging.FileHandler('/var/log/app/{}.log'.format(logger_name))
         fh.setLevel(log_level)
         
         # setup log console hanlder

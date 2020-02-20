@@ -10,11 +10,10 @@ service_file_dest = "/lib/systemd/system/payload.service"
 shutil.copyfile(service_file, service_file_dest)
 print("Copied {} to {}".format(service_file, service_file_dest))
 
-# install python script to start the application
-#python_script = os.path.join(os.path.dirname(os.path.realpath(__file__)), "run.py")
-#python_script_dest = "/usr/bin/run.py"
-#shutil.copyfile(python_script, python_script_dest)
-#print("Copied {} to {}".format(python_script, python_script_dest))
+# create folder for log files
+log_file_directory = "/var/log/app"
+if not os.path.exists(log_file_directory):
+    os.mkdir(log_file_directory)
 
 setup(
     # Application name:
@@ -37,7 +36,7 @@ setup(
     url="http://pypi.python.org/pypi/payload-main-application_v010/",
     license="LICENSE.txt",
     description="Main application to run on payload module.",
-    long_description=open("README.txt").read(),
+    long_description=open("README.md").read(),
 
     # Dependent packages (distributions)
     install_requires=[

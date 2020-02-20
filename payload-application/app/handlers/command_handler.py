@@ -11,7 +11,7 @@ from app.handlers import ping_handler
 import re
 from app import config
 
-#image_handler = image_handler.ImageHandler()
+image_handler = image_handler.ImageHandler()
 ping_handler = ping_handler.PingHandler()
 #error_handler = error_handler.ErrorHandler()
 
@@ -30,16 +30,19 @@ class CommandHandler():
             response = ping_handler.handle_ping()
         
         # command: image_capture
-        elif command == "image_capture":
-            success, response = image_handler.capture_image()
+        elif command == "capture_image":
+            success, response = image_handler.handle_capture()
+
+            if not success:
+                self.logger.warn("Unsuccessful image capture: {}".format(response))
         
         # command: image_transfer
-        # elif command = "image_transfer":
-        #   success, response = image_handler.transfer_image()
+        # elif command = "transfer_image":
+        #   success, response = image_handler.handle_transfer()
 
         else:
             # should never get here
             self.logger.warn("FATAL: Command {} is in valid commands but doesn't have handler.".format(command))
             success = False
-            response = None
+        
         return success, response

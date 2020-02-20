@@ -30,10 +30,13 @@ def run(debug, uart):
                 OBC.status(True)
                 success, response = ch.handle(command)
                 if success:
+                    logger.info("Successful handling command: {}. Sending back OK status...".format(command))
                     OBC.write(response)
                 else:
+                    logger.info("Unsuccessful handling command: {}. Sending back error status...".format(command))
                     OBC.status(False)
             else:
+                logger.info("Command received is invalid: {}. Sending back error status...".format(command))
                 OBC.status(False)
 
         except Exception as e:
