@@ -18,7 +18,7 @@ class OBC():
         self.UART = None
         self.use_uart = None
 
-    # try to establish connection with OBC
+    # get UART port
     def connect(self, use_uart):
         self.use_uart = use_uart
         if self.use_uart:
