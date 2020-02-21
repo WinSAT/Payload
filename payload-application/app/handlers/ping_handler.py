@@ -14,6 +14,6 @@ class PingHandler:
         self.logger = logger.Logger("ping-handler")
 
     def handle_ping(self):
-        return "pong"
+        return True, "pong"
 
 

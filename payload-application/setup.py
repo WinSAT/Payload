@@ -15,6 +15,11 @@ log_file_directory = "/var/log/app"
 if not os.path.exists(log_file_directory):
     os.mkdir(log_file_directory)
 
+# create folder for image files
+image_file_directory = "/images/"
+if not os.path.exists(image_file_directory):
+    os.mkdir(image_file_directory)
+
 setup(
     # Application name:
     name="payload-main-application",

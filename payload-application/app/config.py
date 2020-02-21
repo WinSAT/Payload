@@ -5,7 +5,9 @@ from app.handlers import command_handler
 # RETURN CODES
 RETURN_CODE = {
     0 : "OK",
-    1 : "ERR"
+    1 : "ERR",
+    2 : "DONE",
+    3 : "FAIL"
 }
 
 COMMANDS = {
@@ -19,3 +21,8 @@ PORT_NAME = {
 }
 
 REGEX = "\<\<(.*?)\>\>"
+
+
+CAMERA = {
+    "resolution" : {"height": 1200, "width": 1600} 
+}

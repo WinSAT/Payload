@@ -30,7 +30,7 @@ def run(debug, uart):
 
             if (OBC.check_command(command)):
                 OBC.status(True)
-                success, response = ch.handle(command)
+                success, response = ch.handle(command, OBC)
                 if success:
                     logger.info("Successful handling command: {}. Sending back reponse: {}".format(command, response))
                     OBC.write(response)

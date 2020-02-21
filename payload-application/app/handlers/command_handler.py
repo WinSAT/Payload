@@ -21,24 +21,20 @@ class CommandHandler():
         # setup logger
         self.logger = logger.Logger("command-handler")
 
-    def handle(self, command):
+    def handle(self, command, OBC):
         # send the command to the appropriate handler
         
         # command: ping
         if command == "ping":
-            success = True
-            response = ping_handler.handle_ping()
+            success, response = ping_handler.handle_ping()
         
         # command: image_capture
         elif command == "capture_image":
             success, response = image_handler.handle_capture()
 
-            if not success:
-                self.logger.warn("Unsuccessful image capture: {}".format(response))
-        
         # command: image_transfer
-        # elif command = "transfer_image":
-        #   success, response = image_handler.handle_transfer()
+        elif command == "transfer_image":
+            success, response = image_handler.handle_transfer(OBC)
 
         else:
             # should never get here

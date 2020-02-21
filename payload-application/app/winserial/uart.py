@@ -23,22 +23,30 @@ class UART:
         self.logger = logger.Logger("UART")
 
     def getc(self, size, timeout=1):
-        return self.serial(size) or None
+        return self.serial.read(size) or None
 
     def putc(self, data, timeout=1):
         return self.serial.write(data) # note that this ignores the timeout
 
-    def transfer_image(self):
+    def transfer_image(self, filename):
         try:
-            stream = open("~/images/image.jpg", 'wb')
-            response = modem.recv(stream)
-            if response is None:
-                self.logger("Error xmodem reading stream: Got None return code.")
-                return False
+            # open uart port
+            self.serial.close()
+            self.serial.open()
+
+            if self.serial.isOpen():
+                self.logger.debug("UART port {} is open. Sending file: {}".format(self.port, filename))
+                stream = open(filename, 'rb')
+                result = self.modem.send(stream)
+                self.serial.close()
+                return result
             else:
-                return True, []
+                self.serial.close()
+                self.logger.warn("Could not open serial port for file transfer: {}".format(self.port))
+                return False
+
         except Exception as e:
-            self.logger("Exception {} trying to read xmodem file stream: {}".format(type(e).__name__,str(e)))
+            self.logger.warn("Exception trying to write to file: {} to xmodem stream: {}|{}".format(filename, type(e).__name__,str(e)))
             return False
 
     # send message to hardware over uart
@@ -63,6 +71,7 @@ class UART:
         # return failure if exception during write/encoding
         except Exception as e:
             self.logger.warn("Error sending message {} over uart port {}: {}".format(str(message), self.port, str(e)))
+            self.serial.close()
             return False
 
     # get message from hardware over uart
@@ -87,4 +96,5 @@ class UART:
         # return failure if exception during read/decoding
         except Exception as e:
             self.logger.warn("Error reading message: {} over uart port {}: {}".format(message, self.port, str(e)))
+            self.serial.close
             return False, None

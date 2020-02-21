@@ -80,3 +80,9 @@ class OBC():
                 print(self.pack(config.RETURN_CODE[0]))
             else:
                 print(self.pack(config.RETURN_CODE[1]))
+
+    def send_image(self, filename):
+        if self.use_uart:
+            return self.UART.transfer_image(filename)
+        else:
+            return True
