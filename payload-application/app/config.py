@@ -26,3 +26,5 @@ REGEX = "\<\<(.*?)\>\>"
 CAMERA = {
     "resolution" : {"height": 1200, "width": 1600} 
 }
+
+RETRY = 5

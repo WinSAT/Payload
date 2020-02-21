@@ -69,22 +69,38 @@ class ImageHandler():
 
     def transfer_image(self, OBC):
         try:
-            filename = None
-            latest_time = 0
-            with os.scandir('/images/') as entries:
-                for entry in entries:
-                    info = entry.stat()
-                    if info.st_mtime > latest_time:
-                        filename = entry.name 
+            # wait for the OBC to tell us to start
+            start = False
+            for i in range(config.RETRY):
+                command = OBC.read()
+                if command == "START":
+                    self.logger.debug("Got START command. Starting image transfer...")
+                    start = True
+                    break
+                else:
+                    self.logger.debug("Waiting for START for image transfer. Got: {}".format(command))
+                    start = False
 
-            if filename == None:
+            if start:
+                filename = None
+                latest_time = 0
+                with os.scandir('/images/') as entries:
+                    for entry in entries:
+                        info = entry.stat()
+                        if info.st_mtime > latest_time:
+                            filename = entry.name
+                            latest_time = info.st_mtime
+
+                if filename == None:
+                    return False
+
+                filepath = '/images/{}'.format(filename)
+                # open up stream to start image transfer
+
+                return OBC.send_image(filepath)
+            else:
+                self.logger.debug("Aborting image transfer. Never got START command.")
                 return False
-
-            filepath = '/images/{}'.format(filename)
-            # open up stream to start image transfer
-
-            success = OBC.send_image(filepath)
-            return success
 
         except Exception as e:
             self.logger.warn("Unable to transfer image name: {} error: {}|{}".format(filename, type(e).__name__, str(e)))
